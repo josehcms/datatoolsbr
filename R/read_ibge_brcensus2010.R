@@ -132,8 +132,6 @@ read_ibge_census2010 <-
       names( microdata ) <- var_newnames
     }
 
-    unlink( x = c( tempf, tempd ), recursive = T )
-
     if( format_microdata ){
       # add function to adjust format of variables
     }
