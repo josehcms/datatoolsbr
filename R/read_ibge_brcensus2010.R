@@ -1,3 +1,25 @@
+#' Read Brazilian 2010 Census data from IBGE website
+#'
+#' Fetch Brazilian 2010 Census data from ftp webpage of IBGE
+#'
+#' @param data data type to be retrieved from IBGE ( person, mortality, household, emigration )
+#' @param vars_list list of variables (characters) to be retrieved from microdata
+#' @param vars_newnames (optional) new names for selected variables
+#' @param municode numerical code of municipality (6 digit)
+#' @param state state abbreviate name (2 letters character)
+#' @param save_RData set TRUE to save data in dest_folder as RData
+#' @param save_csv set TRUE to save data in dest_folder as csv (be careful with sample size)
+#' @param format_microdata (optional) set TRUE to format microdata according to census layout
+#' @param dest_folder destination folder to save microdata
+#'
+#' @return selected states Brazil 2010 census microdata
+#' @export
+#' @source
+#' Censo Demográfico. 2010. Instituto Brasileiro de Geografia e Estatística (IBGE).
+#'
+#' @examples
+
+#'
 
 read_ibge_census2010 <-
   function(
@@ -120,4 +142,4 @@ read_ibge_census2010 <-
   }
 
 
-read_ibge_census2010( vars_list = c( 'V0001', 'V0620', 'V6222'), state = c('sp'))
+#read_ibge_census2010( vars_list = c( 'V0001', 'V0620', 'V6222'), state = c('sp'))
