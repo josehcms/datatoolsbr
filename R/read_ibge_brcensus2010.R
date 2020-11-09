@@ -68,23 +68,31 @@ read_ibge_census2010 <-
     tempd <- tempdir() # tempdir
 
     for( uf in uffilelist ){
-
       zipfile <- paste0( ftpibge2010, uf, '.zip' )
       tempf <- tempfile() # tempfile
-      download.file( zipfile, tempf )
+      download.file( zipfile, tempf, method = 'curl' )
       unzip( tempf, exdir = tempd )
-
-      datafilepath <-
-        file.path( file.path( tempd, uf ) ,
-                   grep( data,
-                         list.files( file.path( tempd, uf ) ),
-                         value = T ) )
-
+      gc( reset = T )
     }
 
-    sel_vars <-
-      person_layout_brcensus2010 %>%
-      filter( varcode %in% vars_list )
+    if( data == 'person' ){
+      sel_vars <-
+        person_layout_brcensus2010 %>%
+        filter( varcode %in% vars_list )
+    } else if( data == 'household'){
+      sel_vars <-
+        houshld_layout_brcensus2010 %>%
+        filter( varcode %in% vars_list )
+    } else if( data == 'emigration'){
+      sel_vars <-
+        emigr_layout_brcensus2010 %>%
+        filter( varcode %in% vars_list )
+    } else{
+      sel_vars <-
+        mort_layout_brcensus2010 %>%
+        filter( varcode %in% vars_list )
+    }
+
 
     # uf dirs
     dir_ufs <-
@@ -93,17 +101,19 @@ read_ibge_census2010 <-
         list.files( file.path( tempd ) )[ list.files( file.path( tempd ) ) %in% ufcodesftp ]
         )
 
-    data_path_list <- c()
+    data_path_list <-
+      lapply( dir_ufs,
+              function( x ){
+                data_path_list  <-
+                  file.path( x,
+                             list.files( x )[ grepl(sel_data,
+                                                    tolower( list.files( x ) ) ) ] )
+                return( data_path_list )
 
-    for( uffile in dir_ufs ){
-      data_path_list  <-
-        c(
-          data_path_list,
-          file.path( uffile,
-                     list.files( uffile )[ grepl(sel_data,
-                                                 tolower( list.files( uffile ) ) ) ] ) )
-    }
+                } )
 
+    data_path_vec <-
+      do.call( c, data_path_list )
 
     col_pos <-
       fwf_positions(
@@ -112,21 +122,21 @@ read_ibge_census2010 <-
         col_names = sel_vars$varcode
       )
 
-    microdata <-
-      data.frame()
+    microdata_list <-
+      lapply( data_path_vec,
+              function( x ){
+                microdata <-
+                  data.table::as.data.table(
+                    readr::read_fwf(
+                      file = file.path( x ),
+                      col_positions = col_pos,
+                      )
+                    )
+                return( microdata )
+              })
 
-    for( data_path in data_path_list ){
-      microdata <-
-        rbind(
-          microdata,
-          as.data.frame(
-            read_fwf(
-              file = file.path( data_path ),
-              col_positions = col_pos,
-              )
-            )
-          )
-      }
+    microdata <-
+      do.call( rbind, microdata_list )
 
     if( !is.null( vars_newnames ) ){
       names( microdata ) <- var_newnames
@@ -136,6 +146,7 @@ read_ibge_census2010 <-
       # add function to adjust format of variables
     }
 
+    unlink( tempd )
     return( microdata )
   }
 
